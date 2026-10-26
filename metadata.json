@@ -1,0 +1,6 @@
+{
+  "name": "Hajari Patrak - Staff Muster & C-Off Register",
+  "description": "પ્રોપર હાજરી પત્રક (GSRTC / સ્ટાફ મસ્ટર) - 7 દિવસ ઓફ ઓટો કેલ્ક્યુલેશન, OFF+P / OFF+PN રાઉન્ડ માર્કિંગ, ડબલ ડ્યુટી (P+PN), 12 CL ટ્રેકર અને જમા ઓફ (Compensatory Off) ખાતાવહી.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

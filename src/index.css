@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Noto Sans Gujarati', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    color: #0f172a;
+    background-color: #f8fafc;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Print Styling for Official Government / GSRTC Muster Roll */
+@media print {
+  @page {
+    size: legal landscape;
+    margin: 6mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  table {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-collapse: collapse !important;
+    font-size: 8px !important;
+  }
+
+  th, td {
+    padding: 1px 2px !important;
+    height: 18px !important;
+    border: 1px solid #475569 !important;
+    font-size: 8px !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Sticky positions removed during print to flow naturally on paper */
+  .sticky {
+    position: static !important;
+  }
+}
