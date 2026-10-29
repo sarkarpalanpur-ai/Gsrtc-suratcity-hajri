@@ -12,6 +12,7 @@ interface MusterHeaderProps {
   totalPayableDaysDepot: number;
   onPrint: () => void;
   onExportExcel: () => void;
+  onDownloadSingleHtml: () => void;
 }
 
 export const MusterHeader: React.FC<MusterHeaderProps> = ({
@@ -24,6 +25,7 @@ export const MusterHeader: React.FC<MusterHeaderProps> = ({
   totalPayableDaysDepot,
   onPrint,
   onExportExcel,
+  onDownloadSingleHtml,
 }) => {
   return (
     <header className="bg-white border-b-2 border-slate-400 shadow-sm print:border-none print:shadow-none">
@@ -87,23 +89,31 @@ export const MusterHeader: React.FC<MusterHeaderProps> = ({
             </div>
 
             {/* Primary Action Buttons */}
-            <div className="flex items-center gap-2 ml-auto lg:ml-0">
+            <div className="flex items-center gap-2 ml-auto lg:ml-0 flex-wrap">
+              <button
+                onClick={onDownloadSingleHtml}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black text-white bg-emerald-700 hover:bg-emerald-800 border-2 border-emerald-900 rounded-xl transition-colors cursor-pointer shadow-xs"
+                title="GitHub Pages પર સીધી મૂકવા માટે સંપૂર્ણ ૧-ફાઇલ (index.html) ડાઉનલોડ કરો"
+              >
+                <span>🌐 ૧-ફાઇલ વેબસાઇટ (GitHub)</span>
+              </button>
+
               <button
                 onClick={onExportExcel}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border-2 border-emerald-600 rounded-xl transition-colors cursor-pointer shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-black text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border-2 border-emerald-600 rounded-xl transition-colors cursor-pointer shadow-2xs"
                 title="Excel (.xlsx) ફાઇલ ડાઉનલોડ કરો"
               >
                 <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
-                <span>એક્સેલ ડાઉનલોડ</span>
+                <span>એક્સેલ</span>
               </button>
 
               <button
                 onClick={onPrint}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black text-white bg-blue-900 hover:bg-blue-800 border-2 border-blue-950 rounded-xl shadow-xs transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black text-white bg-blue-900 hover:bg-blue-800 border-2 border-blue-950 rounded-xl shadow-xs transition-colors cursor-pointer"
                 title="મસ્ટર પ્રિન્ટ અથવા PDF સેવ કરો (Legal Landscape)"
               >
                 <Printer className="w-4 h-4" />
-                <span>પ્રિન્ટ / PDF</span>
+                <span>પ્રિન્ટ</span>
               </button>
             </div>
           </div>

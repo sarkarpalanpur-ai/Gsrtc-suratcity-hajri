@@ -382,6 +382,24 @@ export default function App() {
     }, 0);
   }, [employees, metadata.month]);
 
+  const handleDownloadSingleHtml = async () => {
+    try {
+      const res = await fetch('/hajari_patrak.html');
+      if (!res.ok) throw new Error('Not ok');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'index.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open('/hajari_patrak.html', '_blank');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-['Noto_Sans_Gujarati','Plus_Jakarta_Sans',sans-serif]">
       {/* 1. Header with Depot Details, Tabs & Quick Actions */}
@@ -395,6 +413,7 @@ export default function App() {
         totalPayableDaysDepot={totalPayableDaysDepot}
         onPrint={() => window.print()}
         onExportExcel={() => exportToExcel(metadata, employees, cOffCredits)}
+        onDownloadSingleHtml={handleDownloadSingleHtml}
       />
 
       {/* 2. Main Work Area */}
