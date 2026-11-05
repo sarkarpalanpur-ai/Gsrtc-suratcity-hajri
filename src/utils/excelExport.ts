@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import { Employee, CompensatoryOffCredit, MusterMetadata } from '../types/attendance';
-import { calculateEmployeeSummary, getDaysInMonth, getDayOfWeek, GUJARATI_DAYS_SHORT } from './calculations';
+import { calculateEmployeeSummary, getDaysInMonth, getDayOfWeek, GUJARATI_DAYS_SHORT, formatCOffDateBadge } from './calculations';
 
 export function exportToExcel(
   metadata: MusterMetadata,
@@ -46,7 +46,14 @@ export function exportToExcel(
 
   employees.forEach((emp, index) => {
     const summary = calculateEmployeeSummary(emp, daysInMonth);
-    const dayCells = Array.from({ length: daysInMonth }, (_, i) => emp.days[i + 1] || '');
+    const dayCells = Array.from({ length: daysInMonth }, (_, i) => {
+      const dayNum = i + 1;
+      const code = emp.days[dayNum] || '';
+      if (code && emp.cOffAvailRef?.[dayNum]?.earnedDate) {
+        return `${code} (${formatCOffDateBadge(emp.cOffAvailRef[dayNum].earnedDate)})`;
+      }
+      return code;
+    });
 
     musterRows.push([
       index + 1,
@@ -149,7 +156,14 @@ export function exportToCsv(metadata: MusterMetadata, employees: Employee[]) {
 
   employees.forEach((emp, i) => {
     const summary = calculateEmployeeSummary(emp, daysInMonth);
-    const dayCells = Array.from({ length: daysInMonth }, (_, d) => emp.days[d + 1] || '');
+    const dayCells = Array.from({ length: daysInMonth }, (_, d) => {
+      const dayNum = d + 1;
+      const code = emp.days[dayNum] || '';
+      if (code && emp.cOffAvailRef?.[dayNum]?.earnedDate) {
+        return `${code} (${formatCOffDateBadge(emp.cOffAvailRef[dayNum].earnedDate)})`;
+      }
+      return code;
+    });
     rows.push([
       i + 1,
       emp.tokenNo,

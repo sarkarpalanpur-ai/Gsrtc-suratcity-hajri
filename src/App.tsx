@@ -26,6 +26,7 @@ import { PayrollAndLeaveSummary } from './components/PayrollAndLeaveSummary';
 import { AutoOffModal } from './components/AutoOffModal';
 import { EmployeeManageModal } from './components/EmployeeManageModal';
 import { QuickHelpModal } from './components/QuickHelpModal';
+import { COffAvailModal } from './components/COffAvailModal';
 import { exportToExcel, exportToCsv } from './utils/excelExport';
 import {
   calculateEmployeeSummary,
@@ -78,6 +79,15 @@ export default function App() {
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [cOffModalState, setCOffModalState] = useState<{
+    isOpen: boolean;
+    employee: Employee | null;
+    day: number;
+  }>({
+    isOpen: false,
+    employee: null,
+    day: 1,
+  });
 
   // Save to LocalStorage on updates
   useEffect(() => {
@@ -113,14 +123,52 @@ export default function App() {
     const emp = employees.find((e) => e.id === employeeId);
     if (!emp) return;
 
+    const prevCode = emp.days[day] || '';
+
+    // If selecting C-OFF: open the dedicated C-OFF selection modal so user can choose WHICH previous earned off date (e.g. 8/10/26) to redeem!
+    if (code === 'C-OFF') {
+      setCOffModalState({
+        isOpen: true,
+        employee: emp,
+        day,
+      });
+      return;
+    }
+
+    // If previous code was C-OFF and changing to something else, restore the linked credit in passbook
+    if (prevCode === 'C-OFF') {
+      const usage = emp.cOffAvailRef?.[day];
+      if (usage?.creditId) {
+        setCOffCredits((prev) =>
+          prev.map((c) =>
+            c.id === usage.creditId
+              ? {
+                  ...c,
+                  status: 'AVAILABLE',
+                  availedDate: undefined,
+                  availedInMonth: undefined,
+                }
+              : c
+          )
+        );
+      }
+    }
+
     const dayStr = String(day).padStart(2, '0');
     const dutyDate = `${metadata.month}-${dayStr}`;
 
     setEmployees((prev) =>
       prev.map((e) => {
         if (e.id !== employeeId) return e;
-        const newDays = { ...e.days, [day]: code };
-        return { ...e, days: newDays };
+        const newDays = { ...e.days };
+        const nextAvailRef = { ...(e.cOffAvailRef || {}) };
+        if (code) {
+          newDays[day] = code;
+        } else {
+          delete newDays[day];
+        }
+        delete nextAvailRef[day];
+        return { ...e, days: newDays, cOffAvailRef: nextAvailRef };
       })
     );
 
@@ -161,12 +209,135 @@ export default function App() {
 
         setCOffCredits((prev) => [newCredit, ...prev]);
       }
-    } else {
+    } else if (['OFF+P', 'OFF+PN', 'P+PN', 'H+P', 'H+PN'].includes(prevCode)) {
       // If code was changed from an earnable type to something else, remove the auto credit if still AVAILABLE
       setCOffCredits((prev) =>
         prev.filter((c) => !(c.employeeId === employeeId && c.dutyDate === dutyDate && c.status === 'AVAILABLE'))
       );
     }
+  };
+
+  // Confirm Availing a C-Off or Attributing a Credit Date against a duty/leave code (e.g. P, PN, C-OFF, CL, OFF with 8/10/26)
+  const handleConfirmCOffAvail = (
+    employeeId: string,
+    day: number,
+    creditId: string,
+    earnedDate: string,
+    dutyType: string,
+    targetCode: AttendanceCode = 'C-OFF'
+  ) => {
+    const dayStr = String(day).padStart(2, '0');
+    const availedDateStr = `${metadata.month}-${dayStr}`;
+    const appliedCode = targetCode || 'C-OFF';
+
+    // 1. Update Employee attendance days and store reference to the earned date
+    setEmployees((prev) =>
+      prev.map((emp) => {
+        if (emp.id !== employeeId) return emp;
+        const nextDays = { ...emp.days };
+        if (appliedCode) {
+          nextDays[day] = appliedCode;
+        } else {
+          delete nextDays[day];
+        }
+
+        const nextAvailRef = { ...(emp.cOffAvailRef || {}) };
+        if (earnedDate) {
+          nextAvailRef[day] = {
+            creditId,
+            earnedDate,
+            dutyType,
+            targetCode: appliedCode,
+            notes: `${earnedDate} ની જમા રજા/ડ્યુટી તારીખ ${day} ના રોજ (${appliedCode}) તરીકે વપરાયેલ`,
+          };
+        } else {
+          delete nextAvailRef[day];
+        }
+
+        return {
+          ...emp,
+          days: nextDays,
+          cOffAvailRef: nextAvailRef,
+        };
+      })
+    );
+
+    // 2. Deduct from employee's book: mark credit as AVAILED
+    if (earnedDate) {
+      setCOffCredits((prev) => {
+        const existingIndex = prev.findIndex((c) => c.id === creditId);
+        if (existingIndex !== -1) {
+          return prev.map((c, i) =>
+            i === existingIndex
+              ? {
+                  ...c,
+                  status: 'AVAILED',
+                  availedDate: availedDateStr,
+                  availedInMonth: metadata.month,
+                  notes: `તારીખ ${day}/${metadata.month.split('-')[1]} ના રોજ (${appliedCode}) તરીકે લીધેલ (${earnedDate} ના બદલામાં)`,
+                }
+              : c
+          );
+        } else if (creditId) {
+          // Manual date entered that wasn't previously in book
+          const targetEmp = employees.find((e) => e.id === employeeId);
+          const newCredit: CompensatoryOffCredit = {
+            id: creditId,
+            employeeId,
+            employeeName: targetEmp?.name || '',
+            tokenNo: targetEmp?.tokenNo || '',
+            dutyDate: earnedDate,
+            dutyType: (dutyType as any) || 'OFF+P',
+            month: earnedDate.slice(0, 7),
+            status: 'AVAILED',
+            availedDate: availedDateStr,
+            availedInMonth: metadata.month,
+            notes: `અગાઉની (${earnedDate}) જમા રજા તારીખ ${day} ના રોજ (${appliedCode}) તરીકે વપરાયેલ`,
+            createdAt: new Date().toISOString(),
+          };
+          return [newCredit, ...prev];
+        }
+        return prev;
+      });
+    }
+  };
+
+  // Revoke/Remove an availed C-Off: restore the credit back to AVAILABLE in passbook
+  const handleRemoveCOffAvail = (employeeId: string, day: number) => {
+    const targetEmp = employees.find((e) => e.id === employeeId);
+    const usage = targetEmp?.cOffAvailRef?.[day];
+
+    if (usage?.creditId) {
+      setCOffCredits((prev) =>
+        prev.map((c) =>
+          c.id === usage.creditId
+            ? {
+                ...c,
+                status: 'AVAILABLE',
+                availedDate: undefined,
+                availedInMonth: undefined,
+              }
+            : c
+        )
+      );
+    }
+
+    setEmployees((prev) =>
+      prev.map((emp) => {
+        if (emp.id !== employeeId) return emp;
+        const nextDays = { ...emp.days };
+        delete nextDays[day];
+
+        const nextAvailRef = { ...(emp.cOffAvailRef || {}) };
+        delete nextAvailRef[day];
+
+        return {
+          ...emp,
+          days: nextDays,
+          cOffAvailRef: nextAvailRef,
+        };
+      })
+    );
   };
 
   // Add / Edit Employee
@@ -341,6 +512,15 @@ export default function App() {
                 ...emp.days,
                 [dayNum]: 'C-OFF',
               },
+              cOffAvailRef: {
+                ...(emp.cOffAvailRef || {}),
+                [dayNum]: {
+                  creditId: targetCredit.id,
+                  earnedDate: targetCredit.dutyDate,
+                  dutyType: targetCredit.dutyType,
+                  notes: notes || targetCredit.notes,
+                },
+              },
             };
           })
         );
@@ -450,6 +630,9 @@ export default function App() {
             metadata={metadata}
             employees={filteredEmployees}
             onUpdateAttendance={handleUpdateAttendance}
+            onOpenCOffModal={(emp, day) =>
+              setCOffModalState({ isOpen: true, employee: emp, day })
+            }
             onEditEmployee={(emp) => {
               setEmployeeToEdit(emp);
               setIsEmployeeModalOpen(true);
@@ -465,6 +648,9 @@ export default function App() {
             metadata={metadata}
             employees={filteredEmployees}
             onUpdateAttendance={handleUpdateAttendance}
+            onOpenCOffModal={(emp, day) =>
+              setCOffModalState({ isOpen: true, employee: emp, day })
+            }
             onSwitchToSpreadsheet={() => setActiveTab('muster')}
           />
         )}
@@ -527,6 +713,19 @@ export default function App() {
       <QuickHelpModal
         isOpen={isHelpModalOpen}
         onClose={() => setIsHelpModalOpen(false)}
+      />
+
+      <COffAvailModal
+        isOpen={cOffModalState.isOpen}
+        onClose={() =>
+          setCOffModalState((prev) => ({ ...prev, isOpen: false }))
+        }
+        employee={cOffModalState.employee}
+        day={cOffModalState.day}
+        month={metadata.month}
+        credits={cOffCredits}
+        onConfirmAvail={handleConfirmCOffAvail}
+        onRemoveAvail={handleRemoveCOffAvail}
       />
     </div>
   );

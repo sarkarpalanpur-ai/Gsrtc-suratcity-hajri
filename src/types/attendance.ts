@@ -14,6 +14,14 @@ export type AttendanceCode =
   | 'C-OFF'   // Availed Compensatory Off (વપરાયેલ જમા ઓફ)
   | 'A';      // Absent (ગેરહાજર)
 
+export interface COffUsageRef {
+  creditId: string;
+  earnedDate: string; // e.g. "2026-10-08" or "8/10/26"
+  dutyType?: string;  // e.g. "OFF+P", "OFF+PN", "P", "PN", "P+PN", "H+P"
+  notes?: string;
+  targetCode?: AttendanceCode;
+}
+
 export interface Employee {
   id: string;
   srNo: number;
@@ -24,10 +32,11 @@ export interface Employee {
   clTotalYearly: number;  // Yearly CL Quota (default: 12)
   clUsedPrior: number;    // CL used in previous months this year
   days: Record<number, AttendanceCode>; // Day 1 to 31 -> Code
+  cOffAvailRef?: Record<number, COffUsageRef>; // Day 1 to 31 -> Linked credit/earned date info
   remarks: string;
 }
 
-export type COffDutyType = 'OFF+P' | 'OFF+PN' | 'H+P' | 'H+PN' | 'P+PN';
+export type COffDutyType = 'OFF+P' | 'OFF+PN' | 'H+P' | 'H+PN' | 'P+PN' | 'P' | 'PN';
 
 export interface CompensatoryOffCredit {
   id: string;

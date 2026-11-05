@@ -77,6 +77,9 @@ export const AttendanceLegend: React.FC<AttendanceLegendProps> = ({ onOpenHelp }
         <span className="text-blue-950 bg-blue-100/80 px-2 py-0.5 rounded border border-blue-300">
           ● <b>CL (પરચૂરણ રજા):</b> વર્ષમાં ૧૨ માન્ય રજા છે.
         </span>
+        <span className="text-emerald-950 bg-emerald-100/90 px-2 py-0.5 rounded border border-emerald-400 font-bold">
+          ● <b>તારીખ લિંક (Date on P, PN, CL, C-OFF):</b> કોઈપણ ખાનામાં અગાઉ ડબલ P, PN, ઓફ ડ્યુટી કે તહેવારની તારીખ (દા.ત. 8/10/26) કેલેન્ડર સાથે લિંક કરી શકાય છે.
+        </span>
         <span className="text-teal-950 bg-teal-100/80 px-2 py-0.5 rounded border border-teal-300">
           ● <b>તહેવાર (H):</b> કામ ન કર્યું હોય તો પણ પગારના દિવસમાંથી ઓછો થતો નથી.
         </span>

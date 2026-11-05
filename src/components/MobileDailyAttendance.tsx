@@ -5,6 +5,7 @@ import {
   getDaysInMonth,
   getDayOfWeek,
   GUJARATI_DAYS_FULL,
+  formatCOffDateBadge,
 } from '../utils/calculations';
 import {
   Calendar,
@@ -21,6 +22,7 @@ interface MobileDailyAttendanceProps {
   metadata: MusterMetadata;
   employees: Employee[];
   onUpdateAttendance: (employeeId: string, day: number, code: AttendanceCode) => void;
+  onOpenCOffModal?: (employee: Employee, day: number) => void;
   onSwitchToSpreadsheet: () => void;
 }
 
@@ -28,6 +30,7 @@ export const MobileDailyAttendance: React.FC<MobileDailyAttendanceProps> = ({
   metadata,
   employees,
   onUpdateAttendance,
+  onOpenCOffModal,
   onSwitchToSpreadsheet,
 }) => {
   const daysInMonth = getDaysInMonth(metadata.month);
@@ -233,17 +236,24 @@ export const MobileDailyAttendance: React.FC<MobileDailyAttendanceProps> = ({
                 {/* Current Code Badge */}
                 <div>
                   {currentCode ? (
-                    <span
-                      className={`inline-flex items-center justify-center min-w-8 h-8 px-2 text-xs font-black ${
-                        meta.badgeClass
-                      } ${
-                        meta.isCircled
-                          ? 'rounded-full ring-3 ring-amber-600 font-black shadow-xs'
-                          : 'rounded-lg'
-                      }`}
-                    >
-                      {currentCode}
-                    </span>
+                    <div className="flex flex-col items-end">
+                      <span
+                        className={`inline-flex items-center justify-center min-w-8 h-8 px-2 text-xs font-black ${
+                          meta.badgeClass
+                        } ${
+                          meta.isCircled
+                            ? 'rounded-full ring-3 ring-amber-600 font-black shadow-xs'
+                            : 'rounded-lg'
+                        }`}
+                      >
+                        {currentCode}
+                      </span>
+                      {emp.cOffAvailRef?.[selectedDay]?.earnedDate && (
+                        <span className="text-[10px] font-black text-emerald-950 bg-emerald-200 px-1 rounded mt-1 border border-emerald-500 font-mono">
+                          {formatCOffDateBadge(emp.cOffAvailRef[selectedDay].earnedDate)}
+                        </span>
+                      )}
+                    </div>
                   ) : (
                     <span className="inline-block px-2 py-1 text-xs font-bold text-slate-400 bg-slate-100 border border-slate-300 rounded-lg">
                       ખાલી
@@ -252,10 +262,42 @@ export const MobileDailyAttendance: React.FC<MobileDailyAttendanceProps> = ({
                 </div>
               </div>
 
+              {/* Linked Date details bar if ANY code has an attributed date */}
+              {emp.cOffAvailRef?.[selectedDay]?.earnedDate && (
+                <div className="mb-2 p-2 bg-emerald-50 border-2 border-emerald-400 rounded-lg flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-emerald-950 font-black block">✓ {currentCode || 'હાજરી'} સાથે જમા તારીખ લિંક છે</span>
+                    <span className="text-[11px] text-emerald-800 font-bold">
+                      અગાઉની રજા તારીખ: <b>{formatCOffDateBadge(emp.cOffAvailRef[selectedDay].earnedDate)}</b> ({emp.cOffAvailRef[selectedDay].dutyType || 'ડ્યુટી'})
+                    </span>
+                  </div>
+                  {onOpenCOffModal && (
+                    <button
+                      onClick={() => onOpenCOffModal(emp, selectedDay)}
+                      className="px-2.5 py-1 bg-emerald-700 text-white rounded font-bold text-xs hover:bg-emerald-800 cursor-pointer"
+                    >
+                      તારીખ બદલો / કેલેન્ડર
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* 1-Tap Attendance Buttons Strip */}
               <div className="pt-2 border-t border-slate-200">
-                <div className="text-[10px] font-black text-slate-600 mb-1">
-                  હાજરી કોડ પસંદ કરો (Tap to Mark):
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-black text-slate-600">
+                    હાજરી કોડ પસંદ કરો (Tap to Mark):
+                  </span>
+                  {onOpenCOffModal && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenCOffModal(emp, selectedDay)}
+                      className="text-[10px] font-black text-blue-900 bg-blue-100 hover:bg-blue-200 px-2 py-0.5 rounded border border-blue-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Calendar className="w-3 h-3" />
+                      <span>📅 કેલેન્ડર સાથે ભરો</span>
+                    </button>
+                  )}
                 </div>
                 <div className="grid grid-cols-5 gap-1.5">
                   {quickCodes.map((code) => {
@@ -265,7 +307,13 @@ export const MobileDailyAttendance: React.FC<MobileDailyAttendanceProps> = ({
                     return (
                       <button
                         key={code}
-                        onClick={() => onUpdateAttendance(emp.id, selectedDay, code)}
+                        onClick={() => {
+                          if (code === 'C-OFF' && onOpenCOffModal) {
+                            onOpenCOffModal(emp, selectedDay);
+                            return;
+                          }
+                          onUpdateAttendance(emp.id, selectedDay, code);
+                        }}
                         className={`py-1.5 px-1 rounded-lg text-xs font-black border-2 transition-all cursor-pointer flex flex-col items-center justify-center ${
                           isSelected
                             ? 'bg-blue-900 text-white border-black scale-102 ring-2 ring-blue-400 shadow-xs'

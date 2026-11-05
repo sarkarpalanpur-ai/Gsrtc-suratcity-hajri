@@ -8,13 +8,15 @@ import {
   getDayOfWeek,
   GUJARATI_DAYS_SHORT,
   ENGLISH_DAYS_SHORT,
+  formatCOffDateBadge,
 } from '../utils/calculations';
-import { Trash2, Edit2, ArrowRightCircle, ZoomIn, ZoomOut, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Trash2, Edit2, ArrowRightCircle, ZoomIn, ZoomOut, Eye, ArrowLeft, ArrowRight, Calendar as CalendarIcon } from 'lucide-react';
 
 interface MusterGridProps {
   metadata: MusterMetadata;
   employees: Employee[];
   onUpdateAttendance: (employeeId: string, day: number, code: AttendanceCode) => void;
+  onOpenCOffModal?: (employee: Employee, day: number) => void;
   onEditEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
   onViewEmployeeLedger: (employee: Employee) => void;
@@ -24,6 +26,7 @@ export const MusterGrid: React.FC<MusterGridProps> = ({
   metadata,
   employees,
   onUpdateAttendance,
+  onOpenCOffModal,
   onEditEmployee,
   onDeleteEmployee,
   onViewEmployeeLedger,
@@ -124,7 +127,14 @@ export const MusterGrid: React.FC<MusterGridProps> = ({
       else if (key === 'k') targetCode = 'H+PN';
       else if (key === 'c') targetCode = 'CL';
       else if (key === 'l') targetCode = 'L';
-      else if (key === 'v') targetCode = 'C-OFF';
+      else if (key === 'v') {
+        if (onOpenCOffModal) {
+          e.preventDefault();
+          onOpenCOffModal(employees[empIndex], currentDay);
+          return;
+        }
+        targetCode = 'C-OFF';
+      }
       else if (key === 'a' || key === '0') targetCode = 'A';
       else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === ' ') targetCode = '';
 
@@ -409,6 +419,8 @@ export const MusterGrid: React.FC<MusterGridProps> = ({
                       const dow = getDayOfWeek(metadata.month, dayNum);
                       const isSunday = dow === 0;
                       const meta = ATTENDANCE_CODE_META[code];
+                      const availRef = emp.cOffAvailRef?.[dayNum];
+                      const earnedDateBadge = availRef?.earnedDate ? formatCOffDateBadge(availRef.earnedDate) : '';
 
                       return (
                         <td
@@ -421,12 +433,16 @@ export const MusterGrid: React.FC<MusterGridProps> = ({
                               ? 'ring-3 ring-blue-700 z-10 bg-blue-100 font-black'
                               : 'hover:bg-blue-50'
                           }`}
-                          title={`તારીખ ${dayNum}: ${code ? `${code} (${meta.labelGu})` : 'ખાલી'}`}
+                          title={`તારીખ ${dayNum}: ${
+                            earnedDateBadge
+                              ? `${code} (${earnedDateBadge} ની જમા રજા/ડ્યુટી લિંક થયેલ)`
+                              : code ? `${code} (${meta.labelGu})` : 'ખાલી'
+                          }`}
                         >
                           <div className="w-full h-full flex items-center justify-center p-0.5">
                             {code ? (
                               <span
-                                className={`inline-flex items-center justify-center text-[10.5px] w-full h-full ${
+                                className={`inline-flex flex-col items-center justify-center text-[10px] w-full h-full leading-tight ${
                                   meta.badgeClass
                                 } ${
                                   meta.isCircled
@@ -434,7 +450,12 @@ export const MusterGrid: React.FC<MusterGridProps> = ({
                                     : 'rounded'
                                 }`}
                               >
-                                {code}
+                                <span className="leading-none">{code}</span>
+                                {earnedDateBadge && (
+                                  <span className="text-[7px] font-black tracking-tight text-emerald-950 bg-emerald-200/95 px-0.5 rounded leading-none mt-0.5 border border-emerald-500 font-mono whitespace-nowrap">
+                                    {earnedDateBadge}
+                                  </span>
+                                )}
                               </span>
                             ) : (
                               <span className="text-slate-400 font-black text-xs select-none">·</span>
@@ -633,6 +654,57 @@ export const MusterGrid: React.FC<MusterGridProps> = ({
               </button>
             </div>
 
+            {/* Direct Calendar / Date Picker Button */}
+            {onOpenCOffModal && (() => {
+              const currentEmp = employees.find((e) => e.id === popoverCell.empId);
+              return (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (currentEmp) {
+                      onOpenCOffModal(currentEmp, popoverCell.day);
+                      setPopoverCell(null);
+                    }
+                  }}
+                  className="w-full mb-2.5 py-2 px-3 bg-blue-900 hover:bg-blue-800 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                >
+                  <CalendarIcon className="w-4 h-4 text-amber-300" />
+                  <span>📅 કેલેન્ડર સાથે તારીખ / રજા લિંક કરો</span>
+                </button>
+              );
+            })()}
+
+            {/* If cell already has a linked date (for P, PN, C-OFF, CL, OFF, etc.) */}
+            {(() => {
+              const currentEmp = employees.find((e) => e.id === popoverCell.empId);
+              const currentCode = currentEmp?.days[popoverCell.day];
+              const availRef = currentEmp?.cOffAvailRef?.[popoverCell.day];
+              if (availRef?.earnedDate) {
+                return (
+                  <div className="mb-2 p-2 bg-emerald-50 border-2 border-emerald-500 rounded-xl text-xs flex items-center justify-between gap-1">
+                    <div>
+                      <span className="font-black text-emerald-950 block">✓ {currentCode || 'હાજરી'} સાથે જમા તારીખ લિંક છે</span>
+                      <span className="text-[11px] text-emerald-800 font-bold">
+                        અગાઉની રજા તારીખ: <b>{formatCOffDateBadge(availRef.earnedDate)}</b> ({availRef.dutyType || 'ડ્યુટી'})
+                      </span>
+                    </div>
+                    {onOpenCOffModal && currentEmp && (
+                      <button
+                        onClick={() => {
+                          onOpenCOffModal(currentEmp, popoverCell.day);
+                          setPopoverCell(null);
+                        }}
+                        className="px-2 py-1 bg-emerald-700 text-white rounded-lg font-bold text-[11px] hover:bg-emerald-800 cursor-pointer whitespace-nowrap"
+                      >
+                        બદલો / કેલેન્ડર
+                      </button>
+                    )}
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
             <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto p-1">
               {codesList.map((code) => {
                 const meta = ATTENDANCE_CODE_META[code];
@@ -640,6 +712,14 @@ export const MusterGrid: React.FC<MusterGridProps> = ({
                   <button
                     key={code || 'clear'}
                     onClick={() => {
+                      if (code === 'C-OFF' && onOpenCOffModal) {
+                        const targetEmp = employees.find((e) => e.id === popoverCell.empId);
+                        if (targetEmp) {
+                          onOpenCOffModal(targetEmp, popoverCell.day);
+                          setPopoverCell(null);
+                          return;
+                        }
+                      }
                       onUpdateAttendance(popoverCell.empId, popoverCell.day, code);
                       setPopoverCell(null);
                     }}

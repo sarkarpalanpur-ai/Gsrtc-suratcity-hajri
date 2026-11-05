@@ -148,6 +148,30 @@ export function getDaysInMonth(yearMonth: string): number {
   return new Date(y, m, 0).getDate();
 }
 
+export function formatCOffDateBadge(dateStr?: string): string {
+  if (!dateStr) return '';
+  const clean = dateStr.trim();
+  if (clean.includes('-')) {
+    const parts = clean.split('-');
+    if (parts.length === 3) {
+      const y = parts[0].slice(-2);
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      return `${d}/${m}/${y}`; // e.g. 8/10/26
+    }
+  }
+  if (clean.includes('/')) {
+    const parts = clean.split('/');
+    if (parts.length === 3 && parts[0].length === 4) {
+      const y = parts[0].slice(-2);
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      return `${d}/${m}/${y}`;
+    }
+  }
+  return clean;
+}
+
 export function getDayOfWeek(yearMonth: string, day: number): number {
   const [y, m] = yearMonth.split('-').map(Number);
   return new Date(y, m - 1, day).getDay();

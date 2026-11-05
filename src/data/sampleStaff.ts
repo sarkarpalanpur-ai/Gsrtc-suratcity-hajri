@@ -21,12 +21,23 @@ export const INITIAL_STAFF: Employee[] = [
     clUsedPrior: 3,
     days: {
       1: 'P', 2: 'P', 3: 'P', 4: 'OFF', 5: 'P', 6: 'P', 7: 'P',
-      8: 'P', 9: 'P', 10: 'P', 11: 'OFF+P', // Worked on Off! Round circle
-      12: 'P', 13: 'P', 14: 'P', 15: 'P', 16: 'CL', 17: 'P', 18: 'OFF',
+      8: 'OFF+P', // 8/10/2026 - Off Duty earned!
+      9: 'P', 10: 'P', 11: 'OFF',
+      12: 'P', 13: 'P', 14: 'P',
+      15: 'C-OFF', // 15/10/2026 - C-OFF redeemed against 8/10/26!
+      16: 'CL', 17: 'P', 18: 'OFF',
       19: 'P', 20: 'P', 21: 'H', // Holiday
       22: 'P', 23: 'P', 24: 'P', 25: 'OFF', 26: 'P', 27: 'P', 28: 'P', 29: 'P', 30: 'P', 31: 'P'
     },
-    remarks: 'ઓફમાં ૧ ડ્યુટી જમા',
+    cOffAvailRef: {
+      15: {
+        creditId: 'coff-user-sample',
+        earnedDate: '2026-10-08',
+        dutyType: 'OFF+P',
+        notes: '૦૮/૧૦/૨૦૨૬ ની જમા રજા ૧૫ તારીખે વાપરી'
+      }
+    },
+    remarks: '૧૫ તારીખે C-OFF (8/10/26 ની જમા રજા)',
   },
   {
     id: 'emp-2',
@@ -40,11 +51,20 @@ export const INITIAL_STAFF: Employee[] = [
     days: {
       1: 'P', 2: 'P', 3: 'P', 4: 'P', 5: 'OFF+PN', // Worked night on Off! Round circle
       6: 'PN', 7: 'PN', 8: 'PN', 9: 'P', 10: 'P', 11: 'P',
-      12: 'OFF', 13: 'P', 14: 'P', 15: 'P', 16: 'P', 17: 'P', 18: 'P',
+      12: 'OFF', 13: 'P', 14: 'P', 15: 'P', 16: 'P', 17: 'P', 18: 'PN',
       19: 'OFF', 20: 'P', 21: 'H+P', // Worked on Holiday! Earns holiday credit
       22: 'P', 23: 'P', 24: 'P', 25: 'P', 26: 'OFF', 27: 'P', 28: 'P', 29: 'P', 30: 'P', 31: 'P'
     },
-    remarks: 'તહેવાર + ઓફ ડ્યુટી જમા',
+    cOffAvailRef: {
+      18: {
+        creditId: 'coff-2-sample',
+        earnedDate: '2026-10-05',
+        dutyType: 'OFF+PN',
+        targetCode: 'PN',
+        notes: '૦૫/૧૦ ની નાઇટ ઓફ ડ્યુટી બદલ ૧૮મીએ PN'
+      }
+    },
+    remarks: '૧૮મીએ PN (5/10/26 ની નાઇટ જમા)',
   },
   {
     id: 'emp-3',
@@ -62,7 +82,16 @@ export const INITIAL_STAFF: Employee[] = [
       16: 'P', 17: 'P', 18: 'P', 19: 'P', 20: 'OFF', 21: 'H',
       22: 'P', 23: 'P', 24: 'CL', 25: 'CL', 26: 'P', 27: 'OFF', 28: 'P', 29: 'P', 30: 'P', 31: 'P'
     },
-    remarks: '૧૫ તારીખે ડબલ ડ્યુટી (P+PN)',
+    cOffAvailRef: {
+      24: {
+        creditId: 'coff-4',
+        earnedDate: '2026-10-15',
+        dutyType: 'P+PN',
+        targetCode: 'CL',
+        notes: '૧૫/૧૦ ડબલ ડ્યુટી (P+PN) બદલ ૨૪મીએ CL જમા'
+      }
+    },
+    remarks: '૨૪મીએ CL (15/10/26 ડબલ ડ્યુટી જમા)',
   },
   {
     id: 'emp-4',
@@ -147,7 +176,15 @@ export const INITIAL_STAFF: Employee[] = [
       13: 'P', 14: 'P', 15: 'P', 16: 'P', 17: 'P', 18: 'OFF',
       19: 'P', 20: 'P', 21: 'H', 22: 'P', 23: 'P', 24: 'P', 25: 'OFF', 26: 'P', 27: 'P', 28: 'P', 29: 'P', 30: 'P', 31: 'P'
     },
-    remarks: '૧૨ તારીખે C-OFF વાપરેલ',
+    cOffAvailRef: {
+      12: {
+        creditId: 'coff-6',
+        earnedDate: '2026-09-20',
+        dutyType: 'OFF+P',
+        notes: 'સપ્ટેમ્બરની જમા રજા ૧૨ તારીખે વાપરી'
+      }
+    },
+    remarks: '૧૨ તારીખે C-OFF વાપરેલ (20/09/26 ની જમા રજા)',
   },
   {
     id: 'emp-9',
@@ -187,6 +224,20 @@ export const INITIAL_STAFF: Employee[] = [
 
 export const INITIAL_C_OFF_CREDITS: CompensatoryOffCredit[] = [
   {
+    id: 'coff-user-sample',
+    employeeId: 'emp-1',
+    employeeName: 'પટેલ રમેશભાઈ કે. (Ramesh Patel)',
+    tokenNo: 'M-101',
+    dutyDate: '2026-10-08',
+    dutyType: 'OFF+P',
+    month: '2026-10',
+    status: 'AVAILED',
+    availedDate: '2026-10-15',
+    availedInMonth: '2026-10',
+    notes: '૦૮/૧૦/૨૦૨૬ ના રોજ કરેલ ઓફ ડ્યુટી ૧૫/૧૦/૨૦૨૬ ના રોજ C-OFF તરીકે વાપરેલ (બુકમાંથી બાદ)',
+    createdAt: '2026-10-08T18:00:00Z',
+  },
+  {
     id: 'coff-1',
     employeeId: 'emp-1',
     employeeName: 'પટેલ રમેશભાઈ કે. (Ramesh Patel)',
@@ -199,15 +250,17 @@ export const INITIAL_C_OFF_CREDITS: CompensatoryOffCredit[] = [
     createdAt: '2026-10-11T18:00:00Z',
   },
   {
-    id: 'coff-2',
+    id: 'coff-2-sample',
     employeeId: 'emp-2',
     employeeName: 'ચૌધરી દિનેશભાઈ બી. (Dinesh Chaudhari)',
     tokenNo: 'M-102',
     dutyDate: '2026-10-05',
     dutyType: 'OFF+PN',
     month: '2026-10',
-    status: 'AVAILABLE',
-    notes: 'ઓફના દિવસે નાઇટ શિફ્ટ એક્સ્ટ્રા ફરજ',
+    status: 'AVAILED',
+    availedDate: '2026-10-18',
+    availedInMonth: '2026-10',
+    notes: '૦૫/૧૦ ની નાઇટ ઓફ ડ્યુટી ૧૮મીએ PN તરીકે વાપરી લીધી (બુકમાંથી બાદ)',
     createdAt: '2026-10-05T07:00:00Z',
   },
   {
@@ -230,8 +283,10 @@ export const INITIAL_C_OFF_CREDITS: CompensatoryOffCredit[] = [
     dutyDate: '2026-10-15',
     dutyType: 'P+PN',
     month: '2026-10',
-    status: 'AVAILABLE',
-    notes: 'દિવસ + નાઇટ ડબલ નોકરી',
+    status: 'AVAILED',
+    availedDate: '2026-10-24',
+    availedInMonth: '2026-10',
+    notes: '૧૫/૧૦ દિવસ + નાઇટ ડબલ નોકરી ૨૪મીએ CL તરીકે વાપરેલ (બુકમાંથી બાદ)',
     createdAt: '2026-10-15T23:00:00Z',
   },
   {
