@@ -83,10 +83,12 @@ export default function App() {
     isOpen: boolean;
     employee: Employee | null;
     day: number;
+    initialCode?: AttendanceCode;
   }>({
     isOpen: false,
     employee: null,
     day: 1,
+    initialCode: undefined,
   });
 
   // Save to LocalStorage on updates
@@ -630,8 +632,8 @@ export default function App() {
             metadata={metadata}
             employees={filteredEmployees}
             onUpdateAttendance={handleUpdateAttendance}
-            onOpenCOffModal={(emp, day) =>
-              setCOffModalState({ isOpen: true, employee: emp, day })
+            onOpenCOffModal={(emp, day, initialCode) =>
+              setCOffModalState({ isOpen: true, employee: emp, day, initialCode })
             }
             onEditEmployee={(emp) => {
               setEmployeeToEdit(emp);
@@ -648,8 +650,8 @@ export default function App() {
             metadata={metadata}
             employees={filteredEmployees}
             onUpdateAttendance={handleUpdateAttendance}
-            onOpenCOffModal={(emp, day) =>
-              setCOffModalState({ isOpen: true, employee: emp, day })
+            onOpenCOffModal={(emp, day, initialCode) =>
+              setCOffModalState({ isOpen: true, employee: emp, day, initialCode })
             }
             onSwitchToSpreadsheet={() => setActiveTab('muster')}
           />
@@ -692,41 +694,50 @@ export default function App() {
       </footer>
 
       {/* Modals */}
-      <AutoOffModal
-        isOpen={isAutoOffModalOpen}
-        onClose={() => setIsAutoOffModalOpen(false)}
-        metadata={metadata}
-        employees={employees}
-        onApplyOffs={(updated) => setEmployees(updated)}
-      />
+      {isAutoOffModalOpen && (
+        <AutoOffModal
+          isOpen={isAutoOffModalOpen}
+          onClose={() => setIsAutoOffModalOpen(false)}
+          metadata={metadata}
+          employees={employees}
+          onApplyOffs={(updated) => setEmployees(updated)}
+        />
+      )}
 
-      <EmployeeManageModal
-        isOpen={isEmployeeModalOpen}
-        onClose={() => {
-          setIsEmployeeModalOpen(false);
-          setEmployeeToEdit(null);
-        }}
-        employeeToEdit={employeeToEdit}
-        onSave={handleSaveEmployee}
-      />
+      {isEmployeeModalOpen && (
+        <EmployeeManageModal
+          isOpen={isEmployeeModalOpen}
+          onClose={() => {
+            setIsEmployeeModalOpen(false);
+            setEmployeeToEdit(null);
+          }}
+          employeeToEdit={employeeToEdit}
+          onSave={handleSaveEmployee}
+        />
+      )}
 
-      <QuickHelpModal
-        isOpen={isHelpModalOpen}
-        onClose={() => setIsHelpModalOpen(false)}
-      />
+      {isHelpModalOpen && (
+        <QuickHelpModal
+          isOpen={isHelpModalOpen}
+          onClose={() => setIsHelpModalOpen(false)}
+        />
+      )}
 
-      <COffAvailModal
-        isOpen={cOffModalState.isOpen}
-        onClose={() =>
-          setCOffModalState((prev) => ({ ...prev, isOpen: false }))
-        }
-        employee={cOffModalState.employee}
-        day={cOffModalState.day}
-        month={metadata.month}
-        credits={cOffCredits}
-        onConfirmAvail={handleConfirmCOffAvail}
-        onRemoveAvail={handleRemoveCOffAvail}
-      />
+      {cOffModalState.isOpen && cOffModalState.employee && (
+        <COffAvailModal
+          isOpen={cOffModalState.isOpen}
+          onClose={() =>
+            setCOffModalState((prev) => ({ ...prev, isOpen: false }))
+          }
+          employee={cOffModalState.employee}
+          day={cOffModalState.day}
+          month={metadata.month}
+          credits={cOffCredits}
+          initialCode={cOffModalState.initialCode}
+          onConfirmAvail={handleConfirmCOffAvail}
+          onRemoveAvail={handleRemoveCOffAvail}
+        />
+      )}
     </div>
   );
 }

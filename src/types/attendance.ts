@@ -36,7 +36,16 @@ export interface Employee {
   remarks: string;
 }
 
-export type COffDutyType = 'OFF+P' | 'OFF+PN' | 'H+P' | 'H+PN' | 'P+PN' | 'P' | 'PN';
+export type COffDutyType =
+  | 'OFF+P'
+  | 'OFF+PN'
+  | 'H+P'
+  | 'H+PN'
+  | 'P+PN'
+  | 'P'
+  | 'PN'
+  | 'H'
+  | 'OFF';
 
 export interface CompensatoryOffCredit {
   id: string;

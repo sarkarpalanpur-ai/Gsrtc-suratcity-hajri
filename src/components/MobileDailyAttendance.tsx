@@ -22,7 +22,7 @@ interface MobileDailyAttendanceProps {
   metadata: MusterMetadata;
   employees: Employee[];
   onUpdateAttendance: (employeeId: string, day: number, code: AttendanceCode) => void;
-  onOpenCOffModal?: (employee: Employee, day: number) => void;
+  onOpenCOffModal?: (employee: Employee, day: number, initialCode?: AttendanceCode) => void;
   onSwitchToSpreadsheet: () => void;
 }
 
@@ -284,19 +284,32 @@ export const MobileDailyAttendance: React.FC<MobileDailyAttendanceProps> = ({
 
               {/* 1-Tap Attendance Buttons Strip */}
               <div className="pt-2 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
                   <span className="text-[10px] font-black text-slate-600">
                     હાજરી કોડ પસંદ કરો (Tap to Mark):
                   </span>
                   {onOpenCOffModal && (
-                    <button
-                      type="button"
-                      onClick={() => onOpenCOffModal(emp, selectedDay)}
-                      className="text-[10px] font-black text-blue-900 bg-blue-100 hover:bg-blue-200 px-2 py-0.5 rounded border border-blue-300 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Calendar className="w-3 h-3" />
-                      <span>📅 કેલેન્ડર સાથે ભરો</span>
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => onOpenCOffModal(emp, selectedDay, 'H')}
+                        className="text-[10px] font-black text-teal-900 bg-teal-100 hover:bg-teal-200 px-2 py-0.5 rounded border border-teal-300 flex items-center gap-1 cursor-pointer"
+                        title="તહેવાર H સાથે તારીખ લિંક કરો"
+                      >
+                        <Sparkles className="w-3 h-3 text-teal-700" />
+                        <span>🎉 H + તારીખ</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onOpenCOffModal(emp, selectedDay, 'C-OFF')}
+                        className="text-[10px] font-black text-blue-900 bg-blue-100 hover:bg-blue-200 px-2 py-0.5 rounded border border-blue-300 flex items-center gap-1 cursor-pointer"
+                        title="કેલેન્ડર સાથે તારીખ ભરો"
+                      >
+                        <Calendar className="w-3 h-3" />
+                        <span>📅 કેલેન્ડર</span>
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div className="grid grid-cols-5 gap-1.5">
@@ -309,12 +322,12 @@ export const MobileDailyAttendance: React.FC<MobileDailyAttendanceProps> = ({
                         key={code}
                         onClick={() => {
                           if (code === 'C-OFF' && onOpenCOffModal) {
-                            onOpenCOffModal(emp, selectedDay);
+                            onOpenCOffModal(emp, selectedDay, 'C-OFF');
                             return;
                           }
                           onUpdateAttendance(emp.id, selectedDay, code);
                         }}
-                        className={`py-1.5 px-1 rounded-lg text-xs font-black border-2 transition-all cursor-pointer flex flex-col items-center justify-center ${
+                        className={`py-1.5 px-1 rounded-lg text-xs font-black border-2 transition-all cursor-pointer flex flex-col items-center justify-center relative ${
                           isSelected
                             ? 'bg-blue-900 text-white border-black scale-102 ring-2 ring-blue-400 shadow-xs'
                             : 'bg-slate-50 text-slate-800 border-slate-300 hover:bg-slate-100'
@@ -326,6 +339,18 @@ export const MobileDailyAttendance: React.FC<MobileDailyAttendanceProps> = ({
                         <span className="text-[8px] opacity-75 truncate max-w-full">
                           {cMeta.labelGu.slice(0, 5)}
                         </span>
+                        {code === 'H' && onOpenCOffModal && (
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenCOffModal(emp, selectedDay, 'H');
+                            }}
+                            className="text-[8px] font-black text-teal-950 bg-teal-200 px-1 rounded mt-0.5 border border-teal-400 hover:bg-teal-300"
+                            title="H સાથે તારીખ લિંક કરો"
+                          >
+                            +📅
+                          </span>
+                        )}
                       </button>
                     );
                   })}

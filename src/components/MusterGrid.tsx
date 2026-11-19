@@ -10,13 +10,13 @@ import {
   ENGLISH_DAYS_SHORT,
   formatCOffDateBadge,
 } from '../utils/calculations';
-import { Trash2, Edit2, ArrowRightCircle, ZoomIn, ZoomOut, Eye, ArrowLeft, ArrowRight, Calendar as CalendarIcon } from 'lucide-react';
+import { Trash2, Edit2, ArrowRightCircle, ZoomIn, ZoomOut, Eye, ArrowLeft, ArrowRight, Calendar as CalendarIcon, Sparkles } from 'lucide-react';
 
 interface MusterGridProps {
   metadata: MusterMetadata;
   employees: Employee[];
   onUpdateAttendance: (employeeId: string, day: number, code: AttendanceCode) => void;
-  onOpenCOffModal?: (employee: Employee, day: number) => void;
+  onOpenCOffModal?: (employee: Employee, day: number, initialCode?: AttendanceCode) => void;
   onEditEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
   onViewEmployeeLedger: (employee: Employee) => void;
@@ -167,6 +167,10 @@ export const MusterGrid: React.FC<MusterGridProps> = ({
     const rect = e.currentTarget.getBoundingClientRect();
     setPopoverCell({ empId, day, rect });
   };
+
+  const popoverEmp = popoverCell ? employees.find((e) => e.id === popoverCell.empId) : null;
+  const popoverAvailRef = popoverCell && popoverEmp ? popoverEmp.cOffAvailRef?.[popoverCell.day] : null;
+  const popoverCode = popoverCell && popoverEmp ? popoverEmp.days[popoverCell.day] : '';
 
   const borderClass = isExtraDarkBorders ? 'border-slate-500' : 'border-slate-400';
 
@@ -654,56 +658,59 @@ export const MusterGrid: React.FC<MusterGridProps> = ({
               </button>
             </div>
 
-            {/* Direct Calendar / Date Picker Button */}
-            {onOpenCOffModal && (() => {
-              const currentEmp = employees.find((e) => e.id === popoverCell.empId);
-              return (
+            {/* Direct Calendar / Date Picker Buttons: H and C-OFF */}
+            {onOpenCOffModal && popoverEmp && (
+              <div className="grid grid-cols-2 gap-1.5 mb-2.5">
                 <button
                   type="button"
                   onClick={() => {
-                    if (currentEmp) {
-                      onOpenCOffModal(currentEmp, popoverCell.day);
-                      setPopoverCell(null);
-                    }
+                    onOpenCOffModal(popoverEmp, popoverCell.day, 'H');
+                    setPopoverCell(null);
                   }}
-                  className="w-full mb-2.5 py-2 px-3 bg-blue-900 hover:bg-blue-800 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                  className="py-2 px-2 bg-teal-800 hover:bg-teal-700 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1 shadow-sm cursor-pointer border border-teal-950"
+                  title="તહેવાર / જાહેર રજા સાથે તારીખ લિંક કરો"
                 >
-                  <CalendarIcon className="w-4 h-4 text-amber-300" />
-                  <span>📅 કેલેન્ડર સાથે તારીખ / રજા લિંક કરો</span>
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>🎉 H + તારીખ (કેલેન્ડર)</span>
                 </button>
-              );
-            })()}
 
-            {/* If cell already has a linked date (for P, PN, C-OFF, CL, OFF, etc.) */}
-            {(() => {
-              const currentEmp = employees.find((e) => e.id === popoverCell.empId);
-              const currentCode = currentEmp?.days[popoverCell.day];
-              const availRef = currentEmp?.cOffAvailRef?.[popoverCell.day];
-              if (availRef?.earnedDate) {
-                return (
-                  <div className="mb-2 p-2 bg-emerald-50 border-2 border-emerald-500 rounded-xl text-xs flex items-center justify-between gap-1">
-                    <div>
-                      <span className="font-black text-emerald-950 block">✓ {currentCode || 'હાજરી'} સાથે જમા તારીખ લિંક છે</span>
-                      <span className="text-[11px] text-emerald-800 font-bold">
-                        અગાઉની રજા તારીખ: <b>{formatCOffDateBadge(availRef.earnedDate)}</b> ({availRef.dutyType || 'ડ્યુટી'})
-                      </span>
-                    </div>
-                    {onOpenCOffModal && currentEmp && (
-                      <button
-                        onClick={() => {
-                          onOpenCOffModal(currentEmp, popoverCell.day);
-                          setPopoverCell(null);
-                        }}
-                        className="px-2 py-1 bg-emerald-700 text-white rounded-lg font-bold text-[11px] hover:bg-emerald-800 cursor-pointer whitespace-nowrap"
-                      >
-                        બદલો / કેલેન્ડર
-                      </button>
-                    )}
-                  </div>
-                );
-              }
-              return null;
-            })()}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenCOffModal(popoverEmp, popoverCell.day, 'C-OFF');
+                    setPopoverCell(null);
+                  }}
+                  className="py-2 px-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1 shadow-sm cursor-pointer border border-blue-950"
+                  title="બદલી રજા C-OFF કે અન્ય કોડ સાથે તારીખ લિંક કરો"
+                >
+                  <CalendarIcon className="w-3.5 h-3.5 text-amber-300" />
+                  <span>📅 C-OFF / તારીખ લિંક</span>
+                </button>
+              </div>
+            )}
+
+            {/* If cell already has a linked date (for H, P, PN, C-OFF, CL, OFF, etc.) */}
+            {popoverAvailRef?.earnedDate && (
+              <div className="mb-2 p-2 bg-emerald-50 border-2 border-emerald-500 rounded-xl text-xs flex items-center justify-between gap-1">
+                <div>
+                  <span className="font-black text-emerald-950 block">✓ {popoverCode || 'હાજરી'} સાથે જમા તારીખ લિંક છે</span>
+                  <span className="text-[11px] text-emerald-800 font-bold">
+                    અગાઉની રજા તારીખ: <b>{formatCOffDateBadge(popoverAvailRef.earnedDate)}</b> ({popoverAvailRef.dutyType || 'ડ્યુટી'})
+                  </span>
+                </div>
+                {onOpenCOffModal && popoverEmp && (
+                  <button
+                    onClick={() => {
+                      onOpenCOffModal(popoverEmp, popoverCell.day, (popoverCode as AttendanceCode) || 'H');
+                      setPopoverCell(null);
+                    }}
+                    className="px-2 py-1 bg-emerald-700 text-white rounded-lg font-bold text-[11px] hover:bg-emerald-800 cursor-pointer whitespace-nowrap"
+                  >
+                    બદલો / કેલેન્ડર
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto p-1">
               {codesList.map((code) => {
@@ -715,7 +722,7 @@ export const MusterGrid: React.FC<MusterGridProps> = ({
                       if (code === 'C-OFF' && onOpenCOffModal) {
                         const targetEmp = employees.find((e) => e.id === popoverCell.empId);
                         if (targetEmp) {
-                          onOpenCOffModal(targetEmp, popoverCell.day);
+                          onOpenCOffModal(targetEmp, popoverCell.day, 'C-OFF');
                           setPopoverCell(null);
                           return;
                         }
@@ -723,20 +730,36 @@ export const MusterGrid: React.FC<MusterGridProps> = ({
                       onUpdateAttendance(popoverCell.empId, popoverCell.day, code);
                       setPopoverCell(null);
                     }}
-                    className={`flex items-center gap-2.5 p-2 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                    className={`flex items-center gap-2.5 p-2 rounded-xl border-2 text-left transition-all cursor-pointer relative ${
                       meta.badgeClass
                     } hover:scale-102 hover:shadow-sm`}
                   >
                     <span
-                      className={`inline-flex items-center justify-center w-8 h-8 text-xs font-black ${
+                      className={`inline-flex items-center justify-center w-8 h-8 text-xs font-black shrink-0 ${
                         meta.isCircled ? 'rounded-full ring-3 ring-amber-600' : 'rounded'
                       }`}
                     >
                       {code || '-'}
                     </span>
-                    <div className="truncate">
+                    <div className="truncate flex-1">
                       <div className="font-black text-xs">{meta.labelGu}</div>
                       <div className="text-[10px] font-bold opacity-80">{meta.labelEn}</div>
+                      {code === 'H' && onOpenCOffModal && (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const targetEmp = employees.find((e) => e.id === popoverCell.empId);
+                            if (targetEmp) {
+                              onOpenCOffModal(targetEmp, popoverCell.day, 'H');
+                              setPopoverCell(null);
+                            }
+                          }}
+                          className="mt-1 inline-flex items-center gap-0.5 text-[9.5px] bg-amber-300 text-amber-950 font-black px-1.5 py-0.5 rounded border border-amber-600 hover:bg-amber-400"
+                          title="H સાથે કેલેન્ડર તારીખ લિંક કરો"
+                        >
+                          📅 +તારીખ
+                        </span>
+                      )}
                     </div>
                   </button>
                 );

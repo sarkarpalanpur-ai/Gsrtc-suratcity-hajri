@@ -222,12 +222,14 @@ export const CompensatoryOffLedger: React.FC<CompensatoryOffLedgerProps> = ({
             className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 cursor-pointer"
           >
             <option value="ALL">બધા પ્રકાર (ઓફ/હોલીડે/ડબલ/P/PN)</option>
+            <option value="H">H (જાહેર રજા / તહેવાર જમા)</option>
+            <option value="H+P">H+P (તહેવાર દિવસ)</option>
+            <option value="H+PN">H+PN (તહેવાર નાઇટ)</option>
+            <option value="OFF">OFF (અઠવાડિક રજા જમા)</option>
             <option value="OFF+P">OFF+P (ઓફ દિવસ ફરજ)</option>
             <option value="OFF+PN">OFF+PN (ઓફ નાઇટ ફરજ)</option>
             <option value="P">P (ડબલ / વધારાની દિવસ નોકરી)</option>
             <option value="PN">PN (ડબલ / વધારાની નાઇટ નોકરી)</option>
-            <option value="H+P">H+P (તહેવાર દિવસ)</option>
-            <option value="H+PN">H+PN (તહેવાર નાઇટ)</option>
             <option value="P+PN">P+PN (ડબલ નોકરી)</option>
           </select>
         </div>
@@ -395,12 +397,14 @@ export const CompensatoryOffLedger: React.FC<CompensatoryOffLedgerProps> = ({
                   onChange={(e) => setFormType(e.target.value as COffDutyType)}
                   className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white"
                 >
+                  <option value="H">H (જાહેર રજા / તહેવાર જમા - Holiday Credit)</option>
+                  <option value="H+P">H+P (જાહેર રજા/તહેવારે દિવસ ફરજ)</option>
+                  <option value="H+PN">H+PN (જાહેર રજા/તહેવારે રાત્રિ ફરજ)</option>
+                  <option value="OFF">OFF (અઠવાડિક રજા જમા - Off Credit)</option>
                   <option value="OFF+P">OFF+P (ઓફ દિવસે દિવસ ફરજ)</option>
                   <option value="OFF+PN">OFF+PN (ઓફ દિવસે રાત્રિ ફરજ)</option>
                   <option value="P">P (ડબલ / વધારાની દિવસ નોકરી)</option>
                   <option value="PN">PN (ડબલ / વધારાની નાઇટ નોકરી)</option>
-                  <option value="H+P">H+P (જાહેર રજા/તહેવારે દિવસ ફરજ)</option>
-                  <option value="H+PN">H+PN (જાહેર રજા/તહેવારે રાત્રિ ફરજ)</option>
                   <option value="P+PN">P+PN (ડબલ નોકરી / દિવસ + નાઇટ)</option>
                 </select>
               </div>

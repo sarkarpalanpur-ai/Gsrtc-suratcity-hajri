@@ -27,6 +27,7 @@ interface COffAvailModalProps {
   day: number;
   month: string;
   credits: CompensatoryOffCredit[];
+  initialCode?: AttendanceCode;
   onConfirmAvail: (
     employeeId: string,
     day: number,
@@ -45,56 +46,64 @@ export const COffAvailModal: React.FC<COffAvailModalProps> = ({
   day,
   month,
   credits,
+  initialCode,
   onConfirmAvail,
   onRemoveAvail,
 }) => {
-  if (!isOpen || !employee) return null;
-
-  // Selected Attendance Code (defaults to current day's code or C-OFF)
-  const currentCellCode = employee.days[day] || 'C-OFF';
-  const currentUsage = employee.cOffAvailRef?.[day];
-
-  const [selectedCode, setSelectedCode] = useState<AttendanceCode>(currentCellCode || 'C-OFF');
-
-  // Find all AVAILABLE credits for this employee
-  const availableCredits = credits.filter(
-    (c) => c.employeeId === employee.id && c.status === 'AVAILABLE'
-  );
-
-  // Calendar Picker State
-  const defaultEarnedDate = currentUsage?.earnedDate || '2026-10-08';
-  const [selectedEarnedDate, setSelectedEarnedDate] = useState<string>(defaultEarnedDate);
-  const [selectedCreditId, setSelectedCreditId] = useState<string>(currentUsage?.creditId || '');
-  const [selectedDutyType, setSelectedDutyType] = useState<string>(currentUsage?.dutyType || 'OFF+P');
+  // 1. All hooks must be declared unconditionally at the very top of the component
+  const [selectedCode, setSelectedCode] = useState<AttendanceCode>(initialCode || 'C-OFF');
+  const [selectedEarnedDate, setSelectedEarnedDate] = useState<string>('2026-10-08');
+  const [selectedCreditId, setSelectedCreditId] = useState<string>('');
+  const [selectedDutyType, setSelectedDutyType] = useState<string>('OFF+P');
   const [customNotes, setCustomNotes] = useState<string>('');
+  const [calendarViewMonth, setCalendarViewMonth] = useState<string>(month || '2026-10');
 
-  // Calendar Interactive View State
-  const [calendarViewMonth, setCalendarViewMonth] = useState<string>(() => {
-    if (defaultEarnedDate && defaultEarnedDate.length >= 7) {
-      return defaultEarnedDate.slice(0, 7);
-    }
-    return month;
-  });
-
-  // Re-sync when modal opens or day/employee changes
+  // Re-sync when modal opens or day/employee/initialCode changes
   useEffect(() => {
+    if (!employee || !isOpen) return;
+
     const existingUsage = employee.cOffAvailRef?.[day];
-    const initialCode = employee.days[day] || 'C-OFF';
-    setSelectedCode(initialCode);
+    const targetCode = initialCode !== undefined ? initialCode : (employee.days[day] || 'C-OFF');
+    setSelectedCode(targetCode);
 
     if (existingUsage) {
       setSelectedEarnedDate(existingUsage.earnedDate);
       setSelectedCreditId(existingUsage.creditId);
-      setSelectedDutyType(existingUsage.dutyType || 'OFF+P');
+      setSelectedDutyType(existingUsage.dutyType || (targetCode === 'H' ? 'H' : 'OFF+P'));
       if (existingUsage.earnedDate && existingUsage.earnedDate.length >= 7) {
         setCalendarViewMonth(existingUsage.earnedDate.slice(0, 7));
       }
     } else {
       setSelectedEarnedDate('2026-10-08');
       setSelectedCreditId('');
-      setSelectedDutyType('OFF+P');
+      setSelectedDutyType(
+        targetCode === 'H'
+          ? 'H'
+          : targetCode === 'H+P'
+          ? 'H+P'
+          : targetCode === 'H+PN'
+          ? 'H+PN'
+          : targetCode === 'OFF'
+          ? 'OFF'
+          : targetCode === 'P'
+          ? 'P'
+          : targetCode === 'PN'
+          ? 'PN'
+          : 'OFF+P'
+      );
+      setCalendarViewMonth(month || '2026-10');
     }
-  }, [employee, day, month, isOpen]);
+  }, [employee, day, month, isOpen, initialCode]);
+
+  // 2. Early return strictly AFTER all hooks have executed
+  if (!isOpen || !employee) return null;
+
+  // Find all AVAILABLE credits for this employee
+  const availableCredits = credits.filter(
+    (c) => c.employeeId === employee.id && c.status === 'AVAILABLE'
+  );
+
+  const currentUsage = employee.cOffAvailRef?.[day];
 
   // All codes available for selection with scrolling buttons
   const allCodes: AttendanceCode[] = [
@@ -237,7 +246,20 @@ export const COffAvailModal: React.FC<COffAvailModalProps> = ({
                   <button
                     key={c || 'blank'}
                     type="button"
-                    onClick={() => setSelectedCode(c)}
+                    onClick={() => {
+                      setSelectedCode(c);
+                      if (c === 'H') {
+                        setSelectedDutyType('H');
+                      } else if (c === 'H+P' || c === 'H+PN') {
+                        setSelectedDutyType(c);
+                      } else if (c === 'OFF') {
+                        setSelectedDutyType('OFF');
+                      } else if (c === 'OFF+P' || c === 'OFF+PN') {
+                        setSelectedDutyType(c);
+                      } else if (c === 'P' || c === 'PN' || c === 'P+PN') {
+                        setSelectedDutyType(c);
+                      }
+                    }}
                     className={`shrink-0 px-3 py-2 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center min-w-[72px] ${
                       isSelected
                         ? 'bg-blue-950 text-white border-black scale-105 shadow-md ring-2 ring-blue-500'
@@ -449,13 +471,15 @@ export const COffAvailModal: React.FC<COffAvailModalProps> = ({
                   onChange={(e) => setSelectedDutyType(e.target.value)}
                   className="w-full text-xs font-bold p-1.5 border-2 border-slate-400 rounded-lg bg-white"
                 >
+                  <option value="H">H (જાહેર રજા / તહેવાર જમા - Public Holiday)</option>
+                  <option value="H+P">H+P (તહેવારે દિવસ ફરજ - Holiday Worked Day)</option>
+                  <option value="H+PN">H+PN (તહેવારે નાઇટ ફરજ - Holiday Worked Night)</option>
+                  <option value="OFF">OFF (અઠવાડિક રજા જમા - Off Credit)</option>
                   <option value="OFF+P">OFF+P (ઓફ દિવસે દિવસ ડ્યુટી)</option>
                   <option value="OFF+PN">OFF+PN (ઓફ દિવસે નાઇટ ડ્યુટી)</option>
                   <option value="P">P (ડબલ / વધારાની દિવસ નોકરી)</option>
                   <option value="PN">PN (ડબલ / વધારાની નાઇટ નોકરી)</option>
                   <option value="P+PN">P+PN (દિવસ + નાઇટ ડબલ નોકરી)</option>
-                  <option value="H+P">H+P (તહેવારે દિવસ ફરજ)</option>
-                  <option value="H+PN">H+PN (તહેવારે નાઇટ ફરજ)</option>
                 </select>
               </div>
             </div>

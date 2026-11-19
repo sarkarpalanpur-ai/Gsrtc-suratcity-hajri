@@ -125,7 +125,16 @@ export const INITIAL_STAFF: Employee[] = [
       15: 'OFF', 16: 'P', 17: 'P', 18: 'P', 19: 'P', 20: 'P', 21: 'H',
       22: 'OFF', 23: 'P', 24: 'P', 25: 'P', 26: 'P', 27: 'P', 28: 'P', 29: 'OFF', 30: 'P', 31: 'P'
     },
-    remarks: 'નિયમિત હાજરી',
+    cOffAvailRef: {
+      21: {
+        creditId: 'coff-h-sample',
+        earnedDate: '2026-10-02',
+        dutyType: 'H',
+        targetCode: 'H',
+        notes: '૦૨/૧૦ ગાંધી જયંતી જાહેર રજા બદલ ૨૧મીએ H જમા રજા'
+      }
+    },
+    remarks: '૨૧મીએ H (2/10/26 ગાંધી જયંતી જમા)',
   },
   {
     id: 'emp-6',
@@ -314,5 +323,31 @@ export const INITIAL_C_OFF_CREDITS: CompensatoryOffCredit[] = [
     availedInMonth: '2026-10',
     notes: 'સપ્ટેમ્બરમાં કરેલ ઓફ ડ્યુટી ૧૨-૧૦-૨૦૨૬ ના રોજ C-OFF તરીકે વાપરી લીધી',
     createdAt: '2026-09-20T18:00:00Z',
+  },
+  {
+    id: 'coff-h-sample',
+    employeeId: 'emp-5',
+    employeeName: 'જોશી મહેશકુમાર ડી. (Mahesh Joshi)',
+    tokenNo: 'M-105',
+    dutyDate: '2026-10-02',
+    dutyType: 'H',
+    month: '2026-10',
+    status: 'AVAILED',
+    availedDate: '2026-10-21',
+    availedInMonth: '2026-10',
+    notes: '૦૨/૧૦/૨૦૨૬ ગાંધી જયંતી જાહેર રજા ૨૧મી તહેવારે H તરીકે વાપરેલ (બુકમાંથી બાદ)',
+    createdAt: '2026-10-02T10:00:00Z',
+  },
+  {
+    id: 'coff-h-available',
+    employeeId: 'emp-1',
+    employeeName: 'પટેલ રમેશભાઈ કે. (Ramesh Patel)',
+    tokenNo: 'M-101',
+    dutyDate: '2026-10-02',
+    dutyType: 'H',
+    month: '2026-10',
+    status: 'AVAILABLE',
+    notes: '૦૨/૧૦/૨૦૨૬ ગાંધી જયંતી જાહેર રજા જમા બાકી (વાપરવા માટે ઉપલબ્ધ)',
+    createdAt: '2026-10-02T10:00:00Z',
   },
 ];
